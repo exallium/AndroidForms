@@ -2,8 +2,9 @@
 MVC Forms for Android
 
 ## Architecture
+Forms are generic, in that they don't care about where the data is coming from, or where it's going to.  This was completely intentional.  This way you can build forms for UI to Model Entity, or JSON to Whatever.  The choice is yours.  Hence the wrapper objects noted below.
 
-# Form
+## Form
 Form is the base of the library.  It takes four parameterized arguments.  These are as follows:
 
 * S - Source, Where data is coming from, such as a piece of UI
