@@ -8,8 +8,8 @@ Form is the base of the library.  It takes four parameterized arguments.  These 
 
 * S - Source, Where data is coming from, such as a piece of UI
 * D - Destination, Where data is going to, such as a Model entity
-* SH - Source Holder, a subclass of SourceHolder<S> which helps manage the source
-* DH - Destination Holder, a subclass of DestinationHolder<D> which helps manage the destination
+* SH - Source Holder, a subclass of SourceHolder\<S\> which helps manage the source
+* DH - Destination Holder, a subclass of DestinationHolder\<D\> which helps manage the destination
 
 ## Sources and their Holders
 A source is linked to a source holder.  The source holder has a couple of abstract methods tied to it.  Specifically:
