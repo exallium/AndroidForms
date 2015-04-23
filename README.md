@@ -38,6 +38,9 @@ The form also defines two protected methods that can be overloaded to facilitate
 
 There is a minimal example in the samples package.
 
+## Builder
+For initaization reasons, forms are created only from builders.  See the sample form for an example.  These builders are subclassed from that of the parent form, and extended normally.
+
 ## TODO
 
 * Add Validator class which can be "added" within a Source Holder.  For example, if you had 3 fields in your UI form, you would add three validators to a list which would get validated in isValid instead of manually writing out what you want to have happen.  These validators should be created within onCreate.  isValid will become final and no longer require custom implementation.  Instead, you just create a custom validator which will work like a predicate and probably contain one.
