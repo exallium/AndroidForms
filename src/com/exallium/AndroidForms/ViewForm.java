@@ -1,34 +1,62 @@
 package com.exallium.AndroidForms;
 
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 
-public abstract class ViewForm<VH extends ViewForm.ViewHolder, E, EH extends Form.EntityHolder<E>> extends Form<E, EH> {
+public abstract class ViewForm<D, DH extends Form.DestinationHolder<D>> extends Form<View, D, Form.SourceHolder<View>, DH> {
 
-    private final ViewHolder viewHolder;
+    private Context context = null;
+    private int layoutId = -1;
 
-    public ViewForm(Context context, E entity) {
-        super(entity);
-        this.viewHolder = getViewHolder(context);
-        populateFields(entity);
-    }
+    public static abstract class Builder<F extends ViewForm, D> extends Form.Builder<F, View, D> {
 
-    public ViewForm(Context context) {
-        super();
-        this.viewHolder = getViewHolder(context);
-    }
+        private Context context = null;
+        private int  layoutId = -1;
 
-    protected abstract ViewHolder getViewHolder(Context context);
-
-    public static class ViewHolder {
-
-        private final View view;
-
-        protected ViewHolder(Context context) {
-            this.view = getView(context);
+        public Builder withContext(Context context) {
+            this.context = context;
+            return this;
         }
 
-        protected View getView(Context context) { return null; }
+        public Builder withLayoutId(int id) {
+            this.layoutId = id;
+            return this;
+        }
+    }
+
+    protected ViewForm(Builder<? extends ViewForm, D> builder) {
+        super(builder);
+        this.context = builder.context;
+        this.layoutId = builder.layoutId;
+    }
+
+    public static abstract class ViewHolder extends SourceHolder<View> {
+
+        private final Context context;
+        private final int layoutId;
+
+        public ViewHolder(Context context, int layoutId) {
+            super(null);
+            this.context = context;
+            this.layoutId = layoutId;
+        }
+
+        public ViewHolder(View source) {
+            super(source);
+            context = source != null ? source.getContext() : null;
+            layoutId = -1;
+        }
+
+        @Override
+        protected View onCreate() {
+            // This is false if we passed a view in via ViewHolder(source)
+            if (context != null && layoutId != -1) {
+                return LayoutInflater.from(context).inflate(layoutId, null);
+
+            }
+            return null;
+        }
 
     }
 }
