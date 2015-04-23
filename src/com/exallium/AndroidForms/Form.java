@@ -2,7 +2,7 @@ package com.exallium.AndroidForms;
 
 import android.os.Bundle;
 
-public abstract class Form<S, D, SH extends Form.SourceHolder<S>, DH extends Form.DestinationHolder<D>> {
+public abstract class Form<S, D, SH extends SourceHolder<S>, DH extends DestinationHolder<D>> {
 
     public static abstract class Builder<F extends Form, S, D> {
         private S source;
@@ -33,80 +33,11 @@ public abstract class Form<S, D, SH extends Form.SourceHolder<S>, DH extends For
 
     }
 
-    /**
-     * Represents where the form data is coming from.  Could be a view, json object, or whatever.
-     * @param <S> The type of source
-     */
-    public static abstract class SourceHolder<S> {
-        private S source;
-
-        public SourceHolder(S source) {
-            this.source = source;
-        }
-
-        boolean validate() {
-            return isValid(source);
-        }
-
-        void create() {
-            if (source == null)
-                source = onCreate();
-        }
-
-        /**
-         * Called lazily when first needed if Source is null
-         * @return The new instance
-         */
-        protected abstract S onCreate();
-
-        /**
-         * Called at time of validation.  Should validate it's fields and return accordingly
-         * @return true if valid, false otherwise
-         */
-        protected abstract boolean isValid(S source);
-    }
-
-    /**
-     * Represents where the data is going to.  Could be a model entity, json object, etc.
-     * @param <D> The type of destination
-     */
-    public static abstract class DestinationHolder<D> {
-
-        private D destination;
-
-        public DestinationHolder(D destination) {
-            this.destination = destination;
-        }
-
-        /**
-         * Called when save is requested
-         * @param destination The destination to save
-         */
-        protected abstract void onSave(D destination);
-
-        /**
-         * Called lazily when first needed if destination is null
-         * @return new instance of D
-         */
-        protected abstract D onCreate();
-
-        void save() {
-            onSave(destination);
-        }
-
-        void create() {
-            if (destination == null)
-                destination = onCreate();
-        }
-    }
-
     private final SH sourceHolder;
     private final DH destinationHolder;
 
     /**
      * Creates a form
-     * @param source The source to use, or NULL if SH should create it's own.
-     * @param destination The destination to use, or NULL if DH should create it's own.
      */
     protected Form(Builder<? extends Form, S, D> builder) {
         sourceHolder = createSourceHolder(builder.source);
