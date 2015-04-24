@@ -2,51 +2,81 @@ package com.exallium.AndroidForms;
 
 import android.os.Bundle;
 
-public abstract class Form<S, D, SH extends SourceHolder<S>, DH extends DestinationHolder<D>> {
+public class Form<S, D> {
 
-    public static abstract class Builder<F extends Form, S, D> {
-        private S source;
-        private D destination;
+    public interface Mapper<F, T> {
+        void map(F from, T to);
+    }
 
-        public Builder from(S source) {
-            this.source = source;
+    public static abstract class Builder<S, D> {
+        private SourceHolder<S> sourceHolder;
+        private DestinationHolder<D> destinationHolder;
+        private Mapper<S, D> sdMapper;
+        private Mapper<D, S> dsMapper;
+        private Mapper<Bundle, S> bundleSMapper;
+        private Mapper<Bundle, D> bundleDMapper;
+
+        public Builder from(SourceHolder<S> sourceHolder) {
+            this.sourceHolder = sourceHolder;
             return this;
         }
 
-        public Builder to(D destination) {
-            this.destination = destination;
+        public Builder to(DestinationHolder<D> destinationHolder) {
+            this.destinationHolder = destinationHolder;
             return this;
         }
 
-        /**
-         * Simply create an instance of F, passing this, and return it.
-         * Thanks Java Generics
-         * @return The new instance.
-         */
-        protected abstract F create();
+        public Builder withSDMapper(Mapper<S, D> sdMapper) {
+            this.sdMapper = sdMapper;
+            return this;
+        }
 
-        public Form build() {
-            F form = create();
-            form.init();
-            return form;
+        public Builder withDSMapper(Mapper<D, S> dsMapper) {
+            this.dsMapper = dsMapper;
+            return this;
+        }
+
+        public Builder withSourceExtrasMapper(Mapper<Bundle, S> bundleSMapper) {
+            this.bundleSMapper = bundleSMapper;
+            return this;
+        }
+
+        public Builder withDestinationExtrasMapper(Mapper<Bundle, D> bundleDMapper) {
+            this.bundleDMapper = bundleDMapper;
+            return this;
+        }
+
+        protected void validate() {
+            if (sourceHolder == null) throw new IllegalArgumentException("Must Provide SourceHolder<S>");
+            if (destinationHolder == null) throw new IllegalArgumentException("Must Provide DestinationHolder<S>");
+            if (sdMapper == null) throw new IllegalArgumentException("Must Provide Mapper<S,D>");
+            if (dsMapper == null) throw new IllegalArgumentException("Must Provide Mapper<D,S>");
+        }
+
+        public Form<S, D> build() {
+            validate();
+            return new Form<S, D>(this);
         }
 
     }
 
-    private final SH sourceHolder;
-    private final DH destinationHolder;
+    private final SourceHolder<S> sourceHolder;
+    private final DestinationHolder<D> destinationHolder;
+    private final Mapper<S, D> sdMapper;
+    private final Mapper<D, S> dsMapper;
+    private final Mapper<Bundle, S> bundleSMapper;
+    private final Mapper<Bundle, D> bundleDMapper;
 
     /**
      * Creates a form
      */
-    protected Form(Builder<? extends Form, S, D> builder) {
-        sourceHolder = createSourceHolder(builder.source);
-        destinationHolder = createDestinationHolder(builder.destination);
-    }
-
-    protected final void init() {
-        sourceHolder.create();
-        destinationHolder.create();
+    protected Form(Builder<S, D> builder) {
+        sourceHolder = builder.sourceHolder;
+        destinationHolder = builder.destinationHolder;
+        sdMapper = builder.sdMapper;
+        dsMapper = builder.dsMapper;
+        bundleSMapper = builder.bundleSMapper;
+        bundleDMapper = builder.bundleDMapper;
     }
 
     /**
@@ -55,8 +85,9 @@ public abstract class Form<S, D, SH extends SourceHolder<S>, DH extends Destinat
      * @param bundle The bundle of extra data
      */
     public final void display(Bundle bundle) {
-        populateSource(sourceHolder, destinationHolder);
-        if (bundle != null) populateSourceFromBundle(sourceHolder, bundle);
+        if (bundle != null && bundleSMapper != null)
+            bundleSMapper.map(bundle, sourceHolder.getSource());
+        dsMapper.map(destinationHolder.getDestination(), sourceHolder.getSource());
     }
 
     /**
@@ -87,7 +118,7 @@ public abstract class Form<S, D, SH extends SourceHolder<S>, DH extends Destinat
      * @return whether or not data validation was successful
      */
     public final boolean save(Bundle bundle) {
-        boolean isValid = isValid();
+        boolean isValid = sourceHolder.onValidate();
         if (isValid) {
             forceSave(bundle);
         }
@@ -99,59 +130,11 @@ public abstract class Form<S, D, SH extends SourceHolder<S>, DH extends Destinat
      * @param bundle The bundle of extra data
      */
     public final void forceSave(Bundle bundle) {
-        populateDestination(sourceHolder, destinationHolder);
-        if (bundle != null) populateDestinationFromBundle(destinationHolder, bundle);
+        if (bundle != null && bundleDMapper != null)
+            bundleDMapper.map(bundle, destinationHolder.getDestination());
+        sdMapper.map(sourceHolder.getSource(), destinationHolder.getDestination());
         destinationHolder.save();
     }
 
-    /**
-     * Returns true on successful validation
-     * @return
-     */
-    public boolean isValid() {
-        return sourceHolder.validate();
-    }
-
-    /**
-     * Should create a new instance of SH and return it.
-     * @param source The source to base it off of, or NULL
-     * @return A new instance of SH
-     */
-    protected abstract SH createSourceHolder(S source);
-
-    /**
-     * Should create a new instance of DH and return it.
-     * @param destination The destination to base it off of, or NULL
-     * @return A new instance of DH
-     */
-    protected abstract DH createDestinationHolder(D destination);
-
-    /**
-     * Maps DH to SH
-     * @param sourceHolder The SH to populate
-     * @param destinationHolder The DH to use to populate SH
-     */
-    protected abstract void populateSource(SH sourceHolder, DH destinationHolder);
-
-    /**
-     * Maps SH to DH
-     * @param sourceHolder The SH to use to populate DH
-     * @param destinationHolder The DH to populate
-     */
-    protected abstract void populateDestination(SH sourceHolder, DH destinationHolder);
-
-    /**
-     * Maps Bundle to DH
-     * @param destinationHolder The DH to populate
-     * @param bundle The Bundle to populate from
-     */
-    protected void populateDestinationFromBundle(DH destinationHolder, Bundle bundle) {}
-
-    /**
-     * Maps Bundle to SH
-     * @param sourceHolder The SH to populate
-     * @param bundle The Bundle to populate from
-     */
-    protected void populateSourceFromBundle(SH sourceHolder, Bundle bundle) {}
 
 }
