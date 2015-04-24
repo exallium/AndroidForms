@@ -7,6 +7,7 @@ import com.exallium.AndroidForms.DestinationHolder;
 import com.exallium.AndroidForms.Form;
 import com.exallium.AndroidForms.R;
 import com.exallium.AndroidForms.ViewHolder;
+import com.exallium.AndroidForms.validators.EditTextIsEmailValidator;
 import com.exallium.AndroidForms.validators.EditTextNotEmptyValidator;
 
 public class LoginForm extends Form<View, LoginForm.AuthData> {
@@ -16,14 +17,16 @@ public class LoginForm extends Form<View, LoginForm.AuthData> {
     }
 
     public static class AuthData {
-        String username;
+        String email;
         String password;
     }
 
     public static Mapper<View, LoginForm.AuthData> sdMapper = new Mapper<View, AuthData>() {
         @Override
         public void map(View from, AuthData to) {
-
+            LoginViewHolder viewHolder = (LoginViewHolder) from.getTag();
+            to.email = viewHolder.email.getText().toString();
+            to.password = viewHolder.password.getText().toString();
         }
     };
 
@@ -31,11 +34,16 @@ public class LoginForm extends Form<View, LoginForm.AuthData> {
 
         @Override
         public void map(AuthData from, View to) {
-
+            LoginViewHolder viewHolder = (LoginViewHolder) to.getTag();
+            viewHolder.email.setText(from.email);
+            viewHolder.password.setText(from.password);
         }
     };
 
     public static class LoginViewHolder extends ViewHolder {
+
+        private EditText email;
+        private EditText password;
 
         public LoginViewHolder(Context context, int resId) {
             super(context, resId);
@@ -43,10 +51,11 @@ public class LoginForm extends Form<View, LoginForm.AuthData> {
 
         @Override
         protected void onViewCreated(View view) {
-            EditText username = (EditText) view.findViewById(R.id.login_username);
-            EditText password = (EditText) view.findViewById(R.id.login_password);
-            addValidator(new EditTextNotEmptyValidator(username));
+            email = (EditText) view.findViewById(R.id.login_email);
+            password = (EditText) view.findViewById(R.id.login_password);
+            addValidator(new EditTextIsEmailValidator(email));
             addValidator(new EditTextNotEmptyValidator(password));
+            view.setTag(this);
         }
     }
 
