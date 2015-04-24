@@ -17,7 +17,7 @@ public abstract class SourceHolder<S> {
         this.source = source;
     }
 
-    public final void addValidator(Validator validator) {
+    final public void addValidator(Validator validator) {
         this.validators.add(validator);
     }
 

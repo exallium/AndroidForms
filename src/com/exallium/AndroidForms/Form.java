@@ -8,7 +8,20 @@ public class Form<S, D> {
         void map(F from, T to);
     }
 
-    public static abstract class Builder<S, D> {
+    public static class Builder<S, D> extends AbstractBuilder<Form<S, D>, S, D, Builder<S, D>> {
+
+        @Override
+        protected Form<S, D> createInstance() {
+            return new Form<S, D>(this);
+        }
+
+        @Override
+        protected Builder<S, D> getBuilder() {
+            return this;
+        }
+    }
+
+    public abstract static class AbstractBuilder<F, S, D, B> {
         private SourceHolder<S> sourceHolder;
         private DestinationHolder<D> destinationHolder;
         private Mapper<S, D> sdMapper;
@@ -16,34 +29,34 @@ public class Form<S, D> {
         private Mapper<Bundle, S> bundleSMapper;
         private Mapper<Bundle, D> bundleDMapper;
 
-        public Builder from(SourceHolder<S> sourceHolder) {
+        public B from(SourceHolder<S> sourceHolder) {
             this.sourceHolder = sourceHolder;
-            return this;
+            return getBuilder();
         }
 
-        public Builder to(DestinationHolder<D> destinationHolder) {
+        public B to(DestinationHolder<D> destinationHolder) {
             this.destinationHolder = destinationHolder;
-            return this;
+            return getBuilder();
         }
 
-        public Builder withSDMapper(Mapper<S, D> sdMapper) {
+        public B withSDMapper(Mapper<S, D> sdMapper) {
             this.sdMapper = sdMapper;
-            return this;
+            return getBuilder();
         }
 
-        public Builder withDSMapper(Mapper<D, S> dsMapper) {
+        public B withDSMapper(Mapper<D, S> dsMapper) {
             this.dsMapper = dsMapper;
-            return this;
+            return getBuilder();
         }
 
-        public Builder withSourceExtrasMapper(Mapper<Bundle, S> bundleSMapper) {
+        public B withSourceExtrasMapper(Mapper<Bundle, S> bundleSMapper) {
             this.bundleSMapper = bundleSMapper;
-            return this;
+            return getBuilder();
         }
 
-        public Builder withDestinationExtrasMapper(Mapper<Bundle, D> bundleDMapper) {
+        public B withDestinationExtrasMapper(Mapper<Bundle, D> bundleDMapper) {
             this.bundleDMapper = bundleDMapper;
-            return this;
+            return getBuilder();
         }
 
         protected void validate() {
@@ -53,9 +66,12 @@ public class Form<S, D> {
             if (dsMapper == null) throw new IllegalArgumentException("Must Provide Mapper<D,S>");
         }
 
-        public Form<S, D> build() {
+        protected abstract F createInstance();
+        protected abstract B getBuilder();
+
+        public final F build() {
             validate();
-            return new Form<S, D>(this);
+            return createInstance();
         }
 
     }
@@ -70,7 +86,7 @@ public class Form<S, D> {
     /**
      * Creates a form
      */
-    protected Form(Builder<S, D> builder) {
+    protected Form(AbstractBuilder<? extends Form<S, D>, S, D, ? extends AbstractBuilder> builder) {
         sourceHolder = builder.sourceHolder;
         destinationHolder = builder.destinationHolder;
         sdMapper = builder.sdMapper;

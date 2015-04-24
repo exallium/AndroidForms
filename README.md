@@ -5,18 +5,21 @@ MVC Forms for Android
 Forms are generic, in that they don't care about where the data is coming from, or where it's going to.  This was completely intentional.  This way you can build forms for UI to Model Entity, or JSON to Whatever.  The choice is yours.  Hence the wrapper objects noted below.
 
 ## Form
-Form is the base of the library.  It takes four parameterized arguments.  These are as follows:
+Form is the base of the library.  It is only created via a builder.  It is recommended that you use a static
+creation method for Form construction in your subclasses.  Form takes these Type arguments:
 
 * S - Source, Where data is coming from, such as a piece of UI
 * D - Destination, Where data is going to, such as a Model entity
-* SH - Source Holder, a subclass of SourceHolder\<S\> which helps manage the source
-* DH - Destination Holder, a subclass of DestinationHolder\<D\> which helps manage the destination
 
 ## Sources and their Holders
-A source is linked to a source holder.  The source holder has a couple of abstract methods tied to it.  Specifically:
+A source is linked to a source holder.  The source holder has a single abstract method tied to it:
 
-* onCreate - Create a new source (if necessary)
-* isValid(source) - Check whether the given source is valid
+* onCreate - Create a new source (if necessary) and adds necessary validators (more below)
+
+It also contains a public api of the following:
+
+* getSource - Retrieves the source, creating one if necessary
+* addValidator - Adds a validator to an internal list.  Should only be used from onCreate.
 
 ## Destinations and their Holders
 A destination is linked to a destination holder.  The destination holder has a couple of abstract methods tied to it.  Specifically:
@@ -24,24 +27,39 @@ A destination is linked to a destination holder.  The destination holder has a c
 * onCreate - Create a new destination (if necessary)
 * onSave - Called when the destination should be saved (if it is saveable)
 
+It also exposes the following public method:
+
+* getDestination - returns the destination, creating it if necessary
+
 ## Form Abstraction
-The form defines 4 abstract methods to be overloaded, which are inspired by the ViewHolder pattern used in recycler view.
+The form defines an abstract builder for you to fill out with objects to build your form.  Forms are pluggable
+value objects in that you can reuse holder classes and Mappers as you want.  Mappers are intended to be stateless.
+You must provide at minimum the following:
 
-* createSourceHolder - Returns a new instance of your defined SourceHolder implementation
-* createDestinationHolder - Returns a new instance of your defined DestinationHolder implementation
-* populateSource(SourceHolder, DestinationHolder) - Map from Destination to Source
-* populateDestination(SourceHolder, DestinationHolder) - Map from Source to Destination
+* SourceHolder\<S\> within from()
+* DestinationHolder\<D\> within to()
+* Mapper\<S,D\> within withSDMapper, which maps data from S to D
+* Mapper\<D,S\> within withDSMapper, which maps data from D to S
 
-The form also defines two protected methods that can be overloaded to facilitate adding data from bundles:
+The form builder also allows you to add Bundle mappers:
 
-* populateSourceFromBundle(Source, Bundle)
-* populateDestinationFromBundle(Destination, Bundle)
+* Mapper\<Bundle, S\> within withBundleSMapper which maps data from Bundle to S
+* Mapper\<Bundle, D\> within withBundleDMapper which maps data from Bundle to D
 
-There is a minimal example in the samples package.
+There is a minimal example in the samples package.  Note that you could refactor things and utilize these
+classes with any number of forms.
 
 ## Builder
-For initaization reasons, forms are created only from builders.  See the sample form for an example.  These builders are subclassed from that of the parent form, and extended normally.
+For API niceity, Builders are used for building out forms.  It is recommended that you use a create() static
+method to utilize your builder in subclasses.
 
-## TODO
+You must subclass AbstractBuilder, and implement the two abstract methods, but these are minimal, as seen in
+samples.
 
-* Add Validator class which can be "added" within a Source Holder.  For example, if you had 3 fields in your UI form, you would add three validators to a list which would get validated in isValid instead of manually writing out what you want to have happen.  These validators should be created within onCreate.  isValid will become final and no longer require custom implementation.  Instead, you just create a custom validator which will work like a predicate and probably contain one.
+## Validators
+You can now build custom validators using the Validator abstract class.  This validator will hold a weak reference
+to your field and will handle null checking for you. These should be added via the protected method addValidator in
+the onCreate implementation of SourceHolder
+
+## Examples
+See samples package
