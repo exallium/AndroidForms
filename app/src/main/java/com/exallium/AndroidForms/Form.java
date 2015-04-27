@@ -113,7 +113,10 @@ public final class Form<S extends Source, D extends Drain> {
     public void display(Bundle bundle) {
         if (bundle != null && bundleSMapper != null)
             bundleSMapper.mapForward(bundle, source);
-        mapper.mapBackward(drain, source);
+
+        // Do not create a new drain object here
+        if (drain.getDrain() != null)
+            mapper.mapBackward(drain, source);
     }
 
     /**
@@ -152,10 +155,11 @@ public final class Form<S extends Source, D extends Drain> {
     }
 
     /**
-     * Saves ignoring validation. Applies bundle if present
+     * Saves ignoring validation. Applies bundle if present. Creates drain if null
      * @param bundle The bundle of extra data
      */
     public void forceSave(Bundle bundle) {
+        drain.create();
         if (bundle != null && bundleDMapper != null)
             bundleDMapper.mapForward(bundle, drain);
         mapper.mapForward(source, drain);
