@@ -7,6 +7,10 @@ import com.exallium.AndroidForms.samples.model.AuthModel;
 import com.exallium.AndroidForms.samples.view.LoginView;
 import com.exallium.AndroidForms.validators.EditTextIsEmailValidator;
 import com.exallium.AndroidForms.validators.EditTextNotEmptyValidator;
+import com.exallium.AndroidForms.validators.Validator;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class AuthFormFactory {
 
@@ -21,9 +25,9 @@ public class AuthFormFactory {
         }
 
         @Override
-        protected void onViewCreated(LoginView view) {
-            addValidator(new EditTextIsEmailValidator(view.getEmailField()));
-            addValidator(new EditTextNotEmptyValidator(view.getPasswordField()));
+        protected List<? extends Validator> onSourceCreated() {
+            return Arrays.asList(new EditTextIsEmailValidator(getSource().getEmailField()),
+                    new EditTextNotEmptyValidator(getSource().getPasswordField()));
         }
     }
 

@@ -1,65 +1,98 @@
-# AndroidForms
-MVC Forms for Android
+# AndroidForms - MVC Forms for Android
+Forms, data validation... They can be annoying sometimes.  This library is here
+to try to help you out.  AndroidForms aims to be a simple, Generic form library
+for android.  At it's core, there aren't even any dependencies! You could easily
+move Source, Drain, and Form into any project you'd like.  Because I wanted a
+good way to handle forms on Android, I'm keeping it as a dependency so I can
+build out helper Sources and helper Drains, like ViewSource!
 
 ## Architecture
-Forms are generic, in that they don't care about where the data is coming from, or where it's going to.  This was completely intentional.  This way you can build forms for UI to Model Entity, or JSON to Whatever.  The choice is yours.  Hence the wrapper objects noted below.
 
-## Form
-Form is the base of the library.  It is only created via a builder.  It is recommended that you use a static
-creation method for Form construction in your subclasses.  Form takes these Type arguments:
+Form is a final class.  That means you can't override it.  And you know what?
+You shouldn't have to.  All a form does is expose 6 methods:
 
-* S - Source, Where data is coming from, such as a piece of UI
-* D - Destination, Where data is going to, such as a Model entity
+* public save() -- Saves the form from Source into Drain if Source is valid
+* public save(bundle) -- Saves the form from Source into Drain if Source is
+  valid.  If Bundle isn't null, it writes bundle data to Drain first.
+* public forceSave() -- Saves the form from Source into Drain.
+* public forceSave(bundle) -- Saves the form from Source into Drain.  If Bundle
+  isn't null, it writes bundle data to Drain first.
+* public display() -- Writes the Drain information if not null into the Source
+  for initialization.
+* public display(bundle) -- Same as display, but will apply Bundle to Source
+  first.
 
-## Sources and their Holders
-A source is linked to a source holder.  The source holder has a single abstract method tied to it:
+All forms are created through a builder, and because of this, hide their
+constructor.  You can create a form through Form.Builder\<S,D\>.  The S and D
+are the Source and Drain subclasses that you create.  Let's take a look at
+those:
 
-* onCreate - Create a new source (if necessary) and adds necessary validators (more below)
+### Source
 
-It also contains a public api of the following:
+Source is an abstract class that takes some type that you want to wrap.  You've
+got to tell it how to create whatever you're wrapping in onCreate.  You'll
+also, in onCreate, add your Validators, which we'll get to in a minute.  Most of
+Source's functionality is hidden from you, and that's on purpose.  Thus, you can
+see:
 
-* getSource - Retrieves the source, creating one if necessary
-* addValidator - Adds a validator to an internal list.  Should only be used from onCreate.
+* protected onCreate -- Creates a new instance of your Source object (whatever you're
+  wrapping)
+* protected onSourceCreated -- Returns a list of validators to validate the source in form save
+* public getSource -- returns a source object
 
-## Destinations and their Holders
-A destination is linked to a destination holder.  The destination holder has a couple of abstract methods tied to it.  Specifically:
+### Drain
 
-* onCreate - Create a new destination (if necessary)
-* onSave - Called when the destination should be saved (if it is saveable)
+Drain is an abstract class that takes some type you want to wrap.  You've got to
+tell it how to create whatever you're wrapping in onCreate.  You also need to
+specify what to do with these objects on form save in onSave, be it writing to a
+database or emitting an event.  Your call.  If you pass a null to the
+constructor, the drain remains null until save or forceSave is called.
 
-It also exposes the following public method:
+* protectd onCreate -- Where you make an instance of your Drain object
+  (whatever you're wrapping)
+* protected onSave -- where you save your object, emitting events and whatnot.
+* public getDrain -- returns the drain object or null
 
-* getDestination - returns the destination, creating it if necessary
+### Mappers
 
-## Form Abstraction
-The form defines an abstract builder for you to fill out with objects to build your form.  Forms are pluggable
-value objects in that you can reuse holder classes and Mappers as you want.  Mappers are intended to be stateless.
-You must provide at minimum the following:
+Form.Mapper is an interface which has two methods, mapForward and mapBackward.
+These are used for transfering data from Source to Drain or vice versa.  They
+are also used to help you load data from a bundle into a source or drain, for
+initialization.  These should never store any state, and thus can usually be
+static.
 
-* SourceHolder\<S\> within from()
-* DestinationHolder\<D\> within to()
-* Mapper\<S,D\> within withSDMapper, which maps data from S to D
-* Mapper\<D,S\> within withDSMapper, which maps data from D to S
+* public mapForward -- Map from source type to drain type
+* public mapBackward -- Map from drain type to source type
 
-The form builder also allows you to add Bundle mappers:
+### Validators
 
-* Mapper\<Bundle, S\> within withBundleSMapper which maps data from Bundle to S
-* Mapper\<Bundle, D\> within withBundleDMapper which maps data from Bundle to D
+Validator\<F\> takes a type of object to validate.  The objects you can validate
+are ones who's references don't change.  You can't validate a string, per say,
+but you can validate an EditText, part of which of course is taking it's string
+and doing some validation on it... get it?  There are examples in the samples
+package.  Validators store a weak reference to your field, so it needs a
+non-null reference to observe.  Your Source will call isValid when it runs
+validation, and delegate to onValid if the reference is not null.  The reference
+is weak, so we aren't holding onto things we shouldn't be.  You have access to:
 
-There is a minimal example in the samples package.  Note that you could refactor things and utilize these
-classes with any number of forms.
+* protected onValidate(F) -- validate F.
 
-## Builder
-For API niceity, Builders are used for building out forms.  It is recommended that you use a create() static
-method to utilize your builder in subclasses.
+Some simple reusable validators are included for you, and more will be added in
+the future.
 
-You must subclass AbstractBuilder, and implement the two abstract methods, but these are minimal, as seen in
-samples.
+## The Builder
 
-## Validators
-You can now build custom validators using the Validator abstract class.  This validator will hold a weak reference
-to your field and will handle null checking for you. These should be added via the protected method addValidator in
-the onCreate implementation of SourceHolder
+Your form is pieced together via Form.Builder\<S,D\>.  S and D are type
+parameters that refer to the Source and Drain wrapper objects mentioned above.
+This Builder creates a Form\<S,D\> for you and returns a new instance of it with
+every call to build().  The builder's constructor forces you to give
+non-optional arguments, a Source, a Drain, and a Mapper.  You have access to the
+following methods:
 
-## Examples
-See samples package
+* withSourceExtrasMapper(Mapper\<Bundle, S\>) -- Add an optional mapper to map
+  from a bundle into your source (in display(bundle))
+* withDrainExtrasMapper(Mapper\<Bundle, D\>) -- Add an optional mapper to map
+  from a bundle into your drain (in save(bundle) and forceSave(bundle)
+
+Note that for these bundle mappers, you do not need to support mapBackwards, as
+it will never be called.

@@ -7,6 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class FormTest {
@@ -35,21 +38,25 @@ public class FormTest {
 
         @Override
         protected AuthModel onCreate() {
-            AuthModel model = new AuthModel();
-            addValidator(new IsEmailValidator<AuthModel>(model) {
-                @Override
-                protected String getString(AuthModel field) {
-                    return field.email;
-                }
-            });
-            addValidator(new Validator<AuthModel>(model) {
+            return new AuthModel();
+        }
 
-                @Override
-                protected boolean onValidate(AuthModel field) {
-                    return field.password.length() != 0;
-                }
-            });
-            return model;
+        @Override
+        protected List<? extends Validator> onSourceCreated() {
+            return Arrays.asList(
+                new IsEmailValidator<AuthModel>(getSource()) {
+                    @Override
+                        protected String getString(AuthModel field) {
+                            return field.email;
+                        }
+                    },
+                new Validator<AuthModel>(getSource()) {
+                    @Override
+                    protected boolean onValidate(AuthModel field) {
+                            return field.password.length() != 0;
+                        }
+                    }
+            );
         }
 
     }

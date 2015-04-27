@@ -2,6 +2,7 @@ package com.exallium.AndroidForms;
 
 import com.exallium.AndroidForms.validators.Validator;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,15 +16,13 @@ public abstract class Source<S> {
 
     public Source(S source) {
         this.source = source;
+        if (source != null)
+            addValidators(onSourceCreated());
     }
 
-    /**
-     * Use to add new validators to your source. This should be
-     * called from onCreate
-     * @param validator The validator to add.
-     */
-    final public void addValidator(Validator validator) {
-        this.validators.add(validator);
+    private void addValidators(List<? extends Validator>validators) {
+        this.validators.clear();
+        this.validators.addAll(validators);
     }
 
     final boolean onValidate() {
@@ -42,16 +41,22 @@ public abstract class Source<S> {
      * @return the current source
      */
     public S getSource() {
-        if (source == null)
+        if (source == null) {
             source = onCreate();
+            addValidators(onSourceCreated());
+        }
         return source;
     }
 
     /**
      * Called lazily when first needed if Source is null
-     * You should also add your validators here.
      * @return The new instance
      */
     protected abstract S onCreate();
+
+    /**
+     * Your source has been created... add some validators!
+     */
+    protected abstract List<? extends Validator> onSourceCreated();
 
 }

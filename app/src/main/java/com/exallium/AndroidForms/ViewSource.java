@@ -24,7 +24,7 @@ public abstract class ViewSource<V extends View> extends Source<V> {
      */
     public ViewSource(V source) {
         super(source);
-        onViewCreated(source);
+        onSourceCreated();
     }
 
     /**
@@ -34,13 +34,6 @@ public abstract class ViewSource<V extends View> extends Source<V> {
     @Override
     @SuppressWarnings({"unchecked"})
     protected V onCreate() {
-        V view = (V) LayoutInflater.from(context).inflate(resId, null);
-        onViewCreated(view);
-        return view;
+        return (V) LayoutInflater.from(context).inflate(resId, null);
     }
-
-    /**
-     * Add validators in here!
-     */
-    protected abstract void onViewCreated(V view);
 }
