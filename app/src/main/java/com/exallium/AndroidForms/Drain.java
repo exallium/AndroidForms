@@ -14,7 +14,7 @@ public abstract class Drain<D> {
 
     /**
      * Returns the current drain object or NULL if it has not been created yet.
-     * @return
+     * @return The current Drain instance
      */
     public D getDrain() {
         return drain;

@@ -9,6 +9,10 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+version = "0.1"
 
 repositories {
     jcenter()
@@ -18,23 +22,45 @@ repositories {
 android {
     compileSdkVersion 21
     buildToolsVersion "21.1.1"
+    resourcePrefix "androidforms__"
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 21
         versionCode 1
-        versionName "0.1"
+        versionName version
     }
     buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
     }
+}
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+def siteUrl = 'https://github.com/Exallium/AndroidForms'
+def gitUrl = 'https://github.com/Exallium/AndroidForms.git'
+group = 'com.exallium.AndroidForms'
+
+install {
+    repositories.mavenInstaller {
+        // Generate POM.xml
+        pom {
+            project {
+                packaging 'aar'
+                name 'Android Forms'
+                url siteUrl
+                
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'http://opensource.org/licenses/MIT'
+                    }
+                }
+
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
     }
 }
 
@@ -43,4 +69,42 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.apache.maven:maven-ant-tasks:2.1.3'
     testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = "sources"
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options {
+        links("http://docs.oracle.com/javase/7/docs/api/");
+        linksOffline("http://d.android.com/reference", "${android.sdkDirectory}/docs/reference");
+    }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+bintray {
+    user = mavenUser
+    key = binTrayApiKey
+    configurations = ['archives']
+    pkg {
+        repo = 'maven'
+        name = "com.exallium.AndroidForms"
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["MIT"]
+        publish = true
+    }
 }
