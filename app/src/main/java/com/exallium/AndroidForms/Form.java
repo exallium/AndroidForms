@@ -2,7 +2,7 @@ package com.exallium.AndroidForms;
 
 import android.os.Bundle;
 
-public final class Form<S, D> {
+public final class Form<S extends Source, D extends Drain> {
 
     /**
      * Maps a Source and Drain.  Should contain no state.
@@ -28,12 +28,12 @@ public final class Form<S, D> {
         void mapBackward(D drain, S source);
     }
 
-    public static final class Builder<S, D> {
-        private Source<S> source;
-        private Drain<D> drain;
-        private Mapper<? super Source<S>, ? super Drain<D>> mapper;
-        private Mapper<Bundle, Source<S>> bundleSMapper;
-        private Mapper<Bundle, Drain<D>> bundleDMapper;
+    public static final class Builder<S extends Source, D extends Drain> {
+        private S source;
+        private D drain;
+        private Mapper<S, D> mapper;
+        private Mapper<Bundle, S> bundleSMapper;
+        private Mapper<Bundle, D> bundleDMapper;
 
         /**
          * Builder Constructor
@@ -41,7 +41,7 @@ public final class Form<S, D> {
          * @param drain Where the information is going
          * @param mapper A Source to Drain mapper
          */
-        public Builder(Source<S> source, Drain<D> drain, Mapper<? super Source<S>, ? super Drain<D>> mapper) {
+        public Builder(S source, D drain, Mapper<S, D> mapper) {
             this.source = source;
             this.drain = drain;
             this.mapper = mapper;
@@ -56,7 +56,7 @@ public final class Form<S, D> {
          * @param bundleSMapper The Mapper for adding bundle info to Source
          * @return this
          */
-        public Builder withSourceExtrasMapper(Mapper<Bundle, Source<S>> bundleSMapper) {
+        public Builder withSourceExtrasMapper(Mapper<Bundle, S> bundleSMapper) {
             this.bundleSMapper = bundleSMapper;
             return this;
         }
@@ -70,7 +70,7 @@ public final class Form<S, D> {
          * @param bundleDMapper The Mapper for adding bundle info to Drain
          * @return this
          */
-        public Builder withDrainExtrasMapper(Mapper<Bundle, Drain<D>> bundleDMapper) {
+        public Builder withDrainExtrasMapper(Mapper<Bundle, D> bundleDMapper) {
             this.bundleDMapper = bundleDMapper;
             return this;
         }
@@ -88,11 +88,11 @@ public final class Form<S, D> {
 
     }
 
-    private final Source<S> source;
-    private final Drain<D> drain;
-    private final Mapper<? super Source<S>, ? super Drain<D>> mapper;
-    private final Mapper<Bundle, Source<S>> bundleSMapper;
-    private final Mapper<Bundle, Drain<D>> bundleDMapper;
+    private final S source;
+    private final D drain;
+    private final Mapper<S, D> mapper;
+    private final Mapper<Bundle, S> bundleSMapper;
+    private final Mapper<Bundle, D> bundleDMapper;
 
     /**
      * Creates a form
@@ -126,8 +126,8 @@ public final class Form<S, D> {
     /**
      * See save(bundle)
      */
-    public void save() {
-        save(null);
+    public boolean save() {
+        return save(null);
     }
 
     /**

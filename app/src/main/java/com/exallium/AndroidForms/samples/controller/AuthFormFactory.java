@@ -10,11 +10,11 @@ import com.exallium.AndroidForms.validators.EditTextNotEmptyValidator;
 
 public class AuthFormFactory {
 
-    public static Form<LoginView, AuthModel> createForm(LoginView view, AuthModel model) {
-        return new Form.Builder<LoginView, AuthModel>(new LoginViewSource(view), new AuthModelDrain(model), new AuthMapper()).build();
+    public static Form createForm(LoginView view, AuthModel model) {
+        return new Form.Builder<>(new LoginViewSource(view), new AuthModelDrain(model), new AuthMapper()).build();
     }
 
-    private static class LoginViewSource extends ViewSource<LoginView> {
+    static class LoginViewSource extends ViewSource<LoginView> {
 
         public LoginViewSource(LoginView source) {
             super(source);
@@ -27,7 +27,7 @@ public class AuthFormFactory {
         }
     }
 
-    private static class AuthModelDrain extends Drain<AuthModel> {
+    static class AuthModelDrain extends Drain<AuthModel> {
 
         public AuthModelDrain(AuthModel drain) {
             super(drain);
@@ -44,7 +44,7 @@ public class AuthFormFactory {
         }
     }
 
-    private static class AuthMapper implements Form.Mapper<LoginViewSource, AuthModelDrain> {
+    static class AuthMapper implements Form.Mapper<LoginViewSource, AuthModelDrain> {
 
         @Override
         public void mapForward(LoginViewSource source, AuthModelDrain drain) {
