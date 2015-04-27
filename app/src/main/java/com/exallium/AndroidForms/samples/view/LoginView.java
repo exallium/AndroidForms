@@ -1,4 +1,4 @@
-package com.exallium.AndroidForms.samples;
+package com.exallium.AndroidForms.samples.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
