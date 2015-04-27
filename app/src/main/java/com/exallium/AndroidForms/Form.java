@@ -5,54 +5,72 @@ import android.os.Bundle;
 public final class Form<S, D> {
 
     /**
-     * Mapper takes From (F) and To (T) arguments and puts information from F into T
-     * Mapper should never store state.  Map should have no side effects.
-     * For Any (F, T), map(F, T) should result in (F2, T2)
-     * @param <F>
-     * @param <T>
+     * Maps a Source and Drain.  Should contain no state.
+     * Thus, for a given S1, D1, applying a map function should always result
+     * in the same S2, D2.
+     * New objects should not be created, they will both be handed to you.
+     * @param <S> The Source Type
+     * @param <D> The Drain Type
      */
-    public interface Mapper<F, T> {
-        void map(F from, T to);
+    public interface Mapper<S, D> {
+        /**
+         * Map from Source to Drain
+         * @param source The source to map from
+         * @param drain The drain to map to
+         */
+        void mapForward(S source, D drain);
+
+        /**
+         * Map from Drain to Source
+         * @param drain the Drain to Map from
+         * @param source the Source to Map to
+         */
+        void mapBackward(D drain, S source);
     }
 
     public static final class Builder<S, D> {
         private Source<S> source;
         private Drain<D> drain;
-        private Mapper<S, D> sdMapper;
-        private Mapper<D, S> dsMapper;
-        private Mapper<Bundle, S> bundleSMapper;
-        private Mapper<Bundle, D> bundleDMapper;
+        private Mapper<? super Source<S>, ? super Drain<D>> mapper;
+        private Mapper<Bundle, Source<S>> bundleSMapper;
+        private Mapper<Bundle, Drain<D>> bundleDMapper;
 
         /**
          * Builder Constructor
          * @param source The Source of Form information
          * @param drain Where the information is going
-         * @param sdMapper How the Source gets to the drain
-         * @param dsMapper How the Drain gets to the Source (for initialization)
+         * @param mapper A Source to Drain mapper
          */
-        public Builder(Source<S> source, Drain<D> drain, Mapper<S, D> sdMapper, Mapper<D, S> dsMapper) {
+        public Builder(Source<S> source, Drain<D> drain, Mapper<? super Source<S>, ? super Drain<D>> mapper) {
             this.source = source;
             this.drain = drain;
-            this.sdMapper = sdMapper;
-            this.dsMapper = dsMapper;
+            this.mapper = mapper;
         }
 
         /**
-         * Add Source Extras Mapper
+         * Add Source Extras Mapper. mapBackward is currently never called on this bundle
+         * and thus does not require an implementation.
+         *
+         * This item is optional
+         *
          * @param bundleSMapper The Mapper for adding bundle info to Source
          * @return this
          */
-        public Builder withSourceExtrasMapper(Mapper<Bundle, S> bundleSMapper) {
+        public Builder withSourceExtrasMapper(Mapper<Bundle, Source<S>> bundleSMapper) {
             this.bundleSMapper = bundleSMapper;
             return this;
         }
 
         /**
-         * Add Drain Extras Mapper
+         * Add Drain Extras Mapper.  mapBackward is currently never called on this bundle
+         * and thus does not require an implementation.
+         *
+         * This item is optional
+         *
          * @param bundleDMapper The Mapper for adding bundle info to Drain
          * @return this
          */
-        public Builder withDrainExtrasMapper(Mapper<Bundle, D> bundleDMapper) {
+        public Builder withDrainExtrasMapper(Mapper<Bundle, Drain<D>> bundleDMapper) {
             this.bundleDMapper = bundleDMapper;
             return this;
         }
@@ -60,23 +78,21 @@ public final class Form<S, D> {
         private void validate() {
             if (source == null) throw new IllegalArgumentException("Must Provide SourceHolder<S>");
             if (drain == null) throw new IllegalArgumentException("Must Provide DrainHolder<S>");
-            if (sdMapper == null) throw new IllegalArgumentException("Must Provide Mapper<S,D>");
-            if (dsMapper == null) throw new IllegalArgumentException("Must Provide Mapper<D,S>");
+            if (mapper == null) throw new IllegalArgumentException("Must Provide Mapper<D,S>");
         }
 
         public Form<S, D> build() {
             validate();
-            return new Form<S, D>(this);
+            return new Form<>(this);
         }
 
     }
 
     private final Source<S> source;
     private final Drain<D> drain;
-    private final Mapper<S, D> sdMapper;
-    private final Mapper<D, S> dsMapper;
-    private final Mapper<Bundle, S> bundleSMapper;
-    private final Mapper<Bundle, D> bundleDMapper;
+    private final Mapper<? super Source<S>, ? super Drain<D>> mapper;
+    private final Mapper<Bundle, Source<S>> bundleSMapper;
+    private final Mapper<Bundle, Drain<D>> bundleDMapper;
 
     /**
      * Creates a form
@@ -84,8 +100,7 @@ public final class Form<S, D> {
     protected Form(Builder<S, D> builder) {
         source = builder.source;
         drain = builder.drain;
-        sdMapper = builder.sdMapper;
-        dsMapper = builder.dsMapper;
+        mapper = builder.mapper;
         bundleSMapper = builder.bundleSMapper;
         bundleDMapper = builder.bundleDMapper;
     }
@@ -97,8 +112,8 @@ public final class Form<S, D> {
      */
     public void display(Bundle bundle) {
         if (bundle != null && bundleSMapper != null)
-            bundleSMapper.map(bundle, source.getSource());
-        dsMapper.map(drain.getDrain(), source.getSource());
+            bundleSMapper.mapForward(bundle, source);
+        mapper.mapBackward(drain, source);
     }
 
     /**
@@ -142,10 +157,9 @@ public final class Form<S, D> {
      */
     public void forceSave(Bundle bundle) {
         if (bundle != null && bundleDMapper != null)
-            bundleDMapper.map(bundle, drain.getDrain());
-        sdMapper.map(source.getSource(), drain.getDrain());
+            bundleDMapper.mapForward(bundle, drain);
+        mapper.mapForward(source, drain);
         drain.save();
     }
-
 
 }

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 
-public abstract class ViewSource extends Source<View> {
+public abstract class ViewSource<V extends View> extends Source<V> {
 
     private Context context;
     private int resId;
@@ -22,7 +22,7 @@ public abstract class ViewSource extends Source<View> {
      * When we just want to validate part of an already created view
      * @param source
      */
-    public ViewSource(View source) {
+    public ViewSource(V source) {
         super(source);
         onViewCreated(source);
     }
@@ -32,8 +32,9 @@ public abstract class ViewSource extends Source<View> {
      * @return Our inflated view
      */
     @Override
-    protected View onCreate() {
-        View view = LayoutInflater.from(context).inflate(resId, null);
+    @SuppressWarnings({"unchecked"})
+    protected V onCreate() {
+        V view = (V) LayoutInflater.from(context).inflate(resId, null);
         onViewCreated(view);
         return view;
     }
@@ -41,5 +42,5 @@ public abstract class ViewSource extends Source<View> {
     /**
      * Add validators in here!
      */
-    protected abstract void onViewCreated(View view);
+    protected abstract void onViewCreated(V view);
 }

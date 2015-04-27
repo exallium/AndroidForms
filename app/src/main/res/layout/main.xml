@@ -4,7 +4,9 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
     >
-
+    <com.exallium.AndroidForms.samples.view.LoginView android:layout_width="wrap_content"
+                                                      android:layout_height="wrap_content">
+    </com.exallium.AndroidForms.samples.view.LoginView>
 
 </LinearLayout>
 
