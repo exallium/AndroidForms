@@ -5,7 +5,12 @@ import java.lang.ref.WeakReference;
 /**
  * Generic abstract validator for field validation.  Should not
  * store any state information.  Validating the same field with the
- * same data should return the same result every time
+ * same data should return the same result every time.
+ *
+ * A field should be an Object, not a primitive, and should be one which does not
+ * change it's reference.  Not doing so will cause improper behavior.  A good example
+ * of this is an EditText widget
+ *
  * @param <F> The field type we are validating.
  */
 public abstract class Validator<F> {
