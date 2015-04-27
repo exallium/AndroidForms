@@ -8,7 +8,7 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 repositories {
     jcenter()
@@ -20,7 +20,6 @@ android {
     buildToolsVersion "21.1.1"
 
     defaultConfig {
-        applicationId "org.exallium.tradetracker.app"
         minSdkVersion 14
         targetSdkVersion 21
         versionCode 1
