@@ -96,3 +96,7 @@ following methods:
 
 Note that for these bundle mappers, you do not need to support mapBackwards, as
 it will never be called.
+
+## TODO
+
+* Display / Save should return Object wrapped in Source/Drain
