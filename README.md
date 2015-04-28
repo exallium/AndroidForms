@@ -100,3 +100,4 @@ it will never be called.
 ## TODO
 
 * Display / Save should return Object wrapped in Source/Drain
+* Losing type information in builder methods
