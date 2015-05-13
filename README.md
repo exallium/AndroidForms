@@ -97,6 +97,12 @@ following methods:
 Note that for these bundle mappers, you do not need to support mapBackwards, as
 it will never be called.
 
+## Licensing
+
+AndroidForms is licensed under the [MIT
+Licnese](http://opensource.org/licenses/MIT), (C) 2015 by Alex Hart.
+
+
 ## TODO
 
 * Display / Save should return Object wrapped in Source/Drain
